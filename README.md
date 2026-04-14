@@ -1,151 +1,136 @@
-# chat-analyzer
+# stanza
 
-A WhatsApp chat log analytics CLI tool. Built around the AIS Hack 3.0 group chat, but works with any WhatsApp export.
+A command-line analytics tool for WhatsApp group chat exports. Drop in a `.txt` export and get rich terminal dashboards: message stats, activity charts, interaction graphs, topic classification, media leaderboards, and an AI-powered daily digest.
+
+Built for the **AIS Hack 3.0** group chat in Aktobe, Kazakhstan - works with any standard WhatsApp export.
+
+```bash
+python main.py summary
+python main.py activity --mode hour
+python main.py digest --date 2026-03-29
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `summary` | Total messages, date range, peak hour, active weekday, ghost count |
+| `users` | Ranked leaderboard of most active participants |
+| `activity` | Bar charts broken down by hour, weekday, or calendar date |
+| `graph` | Interaction pairs - who replies to whom most often |
+| `topics` | Keyword-based topic tags and tech-stack mentions |
+| `media` | Attachment leaderboard: images, videos, stickers, files |
+| `ghosts` | Members who joined but never sent a message |
+| `penalties` | Parses point/penalty events from messages |
+| `digest` | AI-generated daily summary via Gemini *(API key required)* |
+| `all` | Runs all of the above in one shot |
+
+The UI is powered by [Rich](https://github.com/Textualize/rich) - colored tables, inline bar charts, styled panels. A language picker at startup supports **English**, **Русский**, **Қазақша**, and **Qazaqsha**.
 
 ## Requirements
 
 - Python 3.12+
-- Dependencies: `pip install -r requirements.txt`
+- Windows, macOS, or Linux
 
-## Setup
+## Installation
 
 ```bash
+cd stanza
+python -m venv .venv
+source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Place your WhatsApp export file (e.g. `chat.txt`) in the same folder, or pass it with `-f`.
+## Quick Start
 
-## Commands
-
-### `summary` — Overall statistics
+Export your WhatsApp group chat: open the group → **⋮ → More → Export chat → Without media**. Save it as `chat.txt` in the project folder, then:
 
 ```bash
 python main.py summary
-python main.py summary -f /path/to/other_chat.txt
 ```
 
-Shows: total messages, unique users, date range, avg per day, peak hour, most active weekday, media count, ghost count.
+All commands accept `-f` to point at a different file:
 
----
+```bash
+python main.py summary -f /path/to/my_chat.txt
+```
 
-### `users` — Top message senders
+## Command Reference
 
+### `summary`
+```bash
+python main.py summary
+```
+Displays total messages, unique participants, date range, average messages/day, peak hour, most active weekday, media count, and ghost count.
+
+### `users`
 ```bash
 python main.py users
-python main.py users --top 30
+python main.py users --top 30        # default: 20
 ```
 
-Options:
-- `-n / --top`  Number of users to display (default: 20)
-
----
-
-### `activity` — Time-based charts
-
+### `activity`
 ```bash
-python main.py activity                  # all three charts
-python main.py activity --mode hour      # messages by hour (0–23)
-python main.py activity --mode weekday   # messages by day of week
-python main.py activity --mode date      # messages per calendar date
+python main.py activity              # all three charts
+python main.py activity --mode hour
+python main.py activity --mode weekday
+python main.py activity --mode date
 ```
+`--mode` accepts `hour`, `weekday`, `date`, or `all`.
 
-Options:
-- `-m / --mode`  `hour` | `weekday` | `date` | `all` (default: `all`)
-
----
-
-### `graph` — Interaction graph
-
+### `graph`
 ```bash
 python main.py graph
 python main.py graph --top 20 --window 60
 ```
+Two users are "interacting" when one messages within `--window` seconds (default `120`) of the other. Shows the top `--top` pairs (default `15`).
 
-Shows who replies to whom most often. Two users are "interacting" when one sends a message within the reply window after the other.
-
-Options:
-- `-n / --top`     Number of pairs (default: 15)
-- `-w / --window`  Reply window in seconds (default: 120)
-
----
-
-### `topics` — Topic & tech-stack classification
-
+### `topics`
 ```bash
 python main.py topics
-python main.py topics --no-tech    # skip tech stack table
+python main.py topics --no-tech      # skip tech-stack table
 ```
+Tags messages as `#rules` · `#tasks` · `#linux` · `#games` · `#infra` · `#general` · `#news` · `#media`.
+Also surfaces tech mentions: Python, JavaScript, C++, Rust, Go, SQL, Docker, Linux distros, AI/ML tools, Git, and more.
 
-Classifies messages into tags: `#rules`, `#tasks`, `#linux`, `#games`, `#infra`, `#general`, `#news`, `#media`.
-Also extracts technology mentions: Python, C++, Rust, AI/ML, Linux distros, etc.
-
----
-
-### `media` — Media leaderboard
-
+### `media`
 ```bash
 python main.py media
-python main.py media --top 10
+python main.py media --top 10        # default: 20
 ```
 
-Counts image/video/sticker/file attachments per user.
-
----
-
-### `ghosts` — Silent members
-
+### `ghosts`
 ```bash
 python main.py ghosts
 ```
+Lists participants who appear in system join messages but have zero sent messages.
 
-Lists participants who appeared in system join messages but never sent a chat message.
-
----
-
-### `penalties` — Point events
-
+### `penalties`
 ```bash
 python main.py penalties
 ```
+Scans for messages containing `балл` / `баллов` and extracts the associated point delta.
 
-Extracts any message containing "балл / баллов" and parses the point delta.
-
----
-
-### `digest` — AI daily summary *(requires API key)*
-
+### `digest` *(requires Gemini API key)*
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-...
+export GEMINI_API_KEY=your-key-here
 python main.py digest                        # all days
 python main.py digest --date 2026-03-29      # one specific day
 ```
+Calls **Gemini 2.5 Flash** to generate a structured summary per day: mood, top topics, key moments, most helpful participants, and a short plain-English summary.
 
-Calls the Anthropic API to generate a structured summary for each day:
-- Top topics
-- Key moments
-- Most helpful participants
-- Overall mood
-- Plain-English summary
+> The Gemini SDK is not in `requirements.txt` by default. Install it with `pip install google-genai`.
 
-Options:
-- `-d / --date`  Target date in `YYYY-MM-DD` format
-
----
-
-### `all` — Run everything
-
+### `all`
 ```bash
 python main.py all
 python main.py all --top 20
 ```
+Runs every command except `digest` in sequence. `--top` is passed through to `users` and `media`.
 
-Runs all analyses in sequence (except the AI digest, which requires an API key).
+## Chat File Format
 
----
-
-## File format
-
-The tool expects a standard WhatsApp group export in `.txt` format:
+The parser expects a standard WhatsApp group export:
 
 ```
 29.03.2026, 05:28 - +7 775 186 9650: Когда задачи скинут?
@@ -153,17 +138,40 @@ The tool expects a standard WhatsApp group export in `.txt` format:
 29.03.2026, 07:30 - ‎~ Yeraly добавлен(-а)
 ```
 
-Multi-line messages, invisible Unicode characters, and system events are all handled automatically.
+Handled automatically: multi-line messages, invisible Unicode characters (`\u200E`, `\uFEFF`, `\u200B`, …), system events, both `.` and `/` date separators, and media attachment lines.
 
-## Project structure
+## Project Structure
 
 ```
-chat_analyzer/
-├── main.py          # CLI entrypoint (Click)
-├── parser.py        # WhatsApp log parser
-├── analytics.py     # All stat computations (pure functions)
-├── display.py       # Terminal rendering (Rich tables & charts)
-├── digest.py        # AI digest via Anthropic API
+stanza/
+├── main.py          # CLI entrypoint (Click commands, language picker)
+├── parser.py        # WhatsApp log parser (regex + dataclasses)
+├── analytics.py     # Pure stat computations (Counter, dataclasses)
+├── display.py       # Terminal rendering (Rich tables, bar charts, panels)
+├── digest.py        # AI digest via Gemini API
+├── language.py      # i18n - EN, RU, KZ-Cyrillic, KZ-Latin
+├── chat.py          # Legacy helper (PrettyTable-based, unused by main.py)
 ├── requirements.txt
 └── README.md
 ```
+
+## Internationalization
+
+At startup, stanza prompts you to pick a language. All UI strings are translated:
+
+| Code | Language |
+|---|---|
+| `en` | English |
+| `ru` | Русский |
+| `kz_c` | Қазақша (Cyrillic) |
+| `kz_l` | Qazaqsha (Latin) |
+
+## Known Issues & Suggestions
+
+**`digest.py` hardcodes the API key** as a placeholder string instead of reading from the environment. Replace the literal with `os.environ.get("GEMINI_API_KEY", "")` to match the documented usage.
+
+**`chat.py` is dead code.** It duplicates parsing logic from `parser.py` and is never imported by `main.py`. Safe to delete.
+
+**Missing graceful error for `google-genai`.** Running `digest` without the SDK installed raises a raw `ImportError`. A `try/except ImportError` with a friendly message would improve the experience significantly.
+
+**`results.txt` is always written to the project directory.** Consider making this opt-in with a `--save` flag, or letting the user specify an output path.
