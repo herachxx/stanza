@@ -2,6 +2,8 @@
 
 > **WhatsApp group chat analytics - in your browser, fully private.**
 
+<img width="640" height="360" alt="Web-1" src="Preview (stanza)/Web-1.png" />
+
 Drop a `.txt` export from any WhatsApp group and get an instant, interactive dashboard: message leaderboards, hourly heatmaps, who-replies-to-whom interaction graphs, topic breakdowns, media stats, and more - all without sending your data anywhere.
 
 ---
@@ -135,7 +137,7 @@ python web.py --port 8080
 python web.py --host 0.0.0.0 --port 8080
 ```
 
-> ⚠️ Using `--host 0.0.0.0` makes stanza accessible to anyone on your Wi-Fi network. Use this only on trusted networks.
+> (!) Using `--host 0.0.0.0` makes stanza accessible to anyone on your Wi-Fi network. Use this only on trusted networks.
 
 ---
 
